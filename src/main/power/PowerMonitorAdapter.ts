@@ -1,9 +1,16 @@
-// PowerMonitorAdapter — thin wrapper over Electron's powerMonitor.
-// Subscribes to 'resume' event and triggers Scheduler.reconcile() immediately.
-// Will be implemented during Bootstrap task.
+import { powerMonitor } from 'electron'
 
+/**
+ * Subscribes to wake-from-sleep and forwards it.
+ * The callback must be `scheduler.reconcile()`: that moves the reference point to now
+ * and does not replay notifications that were due while the machine was asleep.
+ */
 export class PowerMonitorAdapter {
-  init(_onResume: () => void): void {
-    // TODO: powerMonitor.on('resume', onResume)
+  private attached = false
+
+  init(onResume: () => void): void {
+    if (this.attached) return
+    powerMonitor.on('resume', onResume)
+    this.attached = true
   }
 }

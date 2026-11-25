@@ -1,61 +1,126 @@
-import { app, BrowserWindow } from 'electron'
-import { join } from 'path'
-import { is } from '@electron-toolkit/utils'
+import { app } from 'electron'
+import { electronApp } from '@electron-toolkit/utils'
+import { buildScheduleView } from '../domain/schedule'
+import { registerIpcHandlers } from './ipc/handlers'
+import { NotificationService } from './notifications/NotificationService'
+import { PowerMonitorAdapter } from './power/PowerMonitorAdapter'
+import { Scheduler } from './scheduler/Scheduler'
+import { applyAutostart } from './startup/Autostart'
+import { AppStateRepository } from './store/AppStateRepository'
+import { TrayManager } from './tray/TrayManager'
+import { WindowManager } from './window/WindowManager'
 
-// isQuitting flag — prevents the 'close' handler from hiding the window during app.quit()
-let isQuitting = false
+/** Matches electron-builder.yml appId. In dev the toolkit uses the Electron executable instead. */
+const APP_USER_MODEL_ID = 'com.dailyroutine.app'
 
-function createWindow(): BrowserWindow {
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 600,
-    minWidth: 640,
-    minHeight: 480,
-    show: false,
-    autoHideMenuBar: true,
-    title: 'Daily Routine',
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: true,
-      contextIsolation: true,
-      nodeIntegration: false
-    }
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+if (!gotSingleInstanceLock) {
+  app.quit()
+} else {
+  const windowManager = new WindowManager()
+  const tray = new TrayManager()
+  let scheduler: Scheduler | null = null
+
+  app.on('second-instance', () => {
+    windowManager.show()
   })
 
-  // Show window only after content is ready to avoid visual flash
-  mainWindow.on('ready-to-show', () => mainWindow.show())
+  app.whenReady().then(() => {
+    electronApp.setAppUserModelId(APP_USER_MODEL_ID)
 
-  // Hide to tray on close instead of quitting (unless app.quit() was called)
-  mainWindow.on('close', (event) => {
-    if (!isQuitting) {
-      event.preventDefault()
-      mainWindow.hide()
+    const repository = new AppStateRepository()
+    repository.init()
+    applyAutostart(repository.isOpenAtLogin())
+
+    const notifications = new NotificationService()
+    const reconcile = (): void => {
+      scheduler?.reconcile()
     }
+
+    scheduler = new Scheduler({
+      getState: (now) => repository.getInMemoryState(now),
+      sendNotification: (body) => {
+        notifications.send(body)
+      },
+      markFired: (entry) => repository.appendNotification(entry),
+      onStateChange: (view) => {
+        windowManager.pushState(view)
+        tray.updateState(view)
+      }
+    })
+
+    const power = new PowerMonitorAdapter()
+    power.init(reconcile)
+
+    const quit = (): void => {
+      app.quit()
+    }
+
+    registerIpcHandlers({
+      getViewState: () => buildScheduleView(repository.getInMemoryState(), new Date()),
+      savePermanentSchedule: (blocks) => {
+        const result = repository.savePermanentSchedule(blocks)
+        if (result.ok) reconcile()
+        return result
+      },
+      saveDailyOverride: (blocks) => {
+        const result = repository.saveDailyOverride(blocks)
+        if (result.ok) reconcile()
+        return result
+      },
+      resetDailyOverride: () => {
+        repository.resetDailyOverride()
+        reconcile()
+      },
+      pauseNotifications: () => {
+        repository.pauseNotifications()
+        reconcile()
+      },
+      resumeNotifications: () => {
+        repository.resumeNotifications()
+        reconcile()
+      },
+      quit,
+      sendTestNotification: () => notifications.sendTest()
+    })
+
+    let trayReady = false
+    try {
+      tray.init({
+        onOpen: () => windowManager.show(),
+        onPause: () => {
+          repository.pauseNotifications()
+          reconcile()
+        },
+        onResume: () => {
+          repository.resumeNotifications()
+          reconcile()
+        },
+        onToggleAutostart: (enabled) => {
+          repository.setOpenAtLogin(enabled)
+          applyAutostart(enabled)
+          tray.refreshAutostart()
+        },
+        onQuit: quit,
+        isAutostartEnabled: () => repository.isOpenAtLogin()
+      })
+      trayReady = true
+    } catch (error) {
+      console.error('[tray] System tray is unavailable in this session', error)
+    }
+
+    scheduler.start()
+
+    // A session without a tray has no other way to reach the window.
+    if (!trayReady) windowManager.show()
   })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
+  app.on('before-quit', () => {
+    windowManager.prepareToQuit()
+    scheduler?.stop()
+    tray.destroy()
+  })
 
-  return mainWindow
+  // The hidden window is not the app. Exit only through the Quit action.
+  app.on('window-all-closed', () => undefined)
 }
-
-app.whenReady().then(() => {
-  // TODO (Bootstrap): initialize AppStateRepository, TrayManager, Scheduler,
-  //                   PowerMonitorAdapter, IPC handlers, autostart registration.
-  //                   Window creation is currently eager for development purposes;
-  //                   it will be made lazy (tray-triggered) in the Bootstrap task.
-  createWindow()
-})
-
-app.on('before-quit', () => {
-  isQuitting = true
-})
-
-// Prevent quitting when all windows are closed — app lives in tray
-app.on('window-all-closed', () => {
-  // Intentionally empty: the app continues running in the system tray.
-  // It exits only via app.quit() triggered by the "Quit" action.
-})

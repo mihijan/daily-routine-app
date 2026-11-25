@@ -1,9 +1,8 @@
-// Type declarations for the contextBridge API exposed to the Renderer.
-// Will be expanded with typed methods during Data Modeling / Bootstrap tasks.
+import type { DailyRoutineApi } from '../shared/ipc-contracts'
 
 declare global {
   interface Window {
-    api: Record<string, never>
+    api: DailyRoutineApi
   }
 }
 

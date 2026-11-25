@@ -17,6 +17,10 @@ files:
 asarUnpack:
   - resources/**
 
+extraResources:
+  - from: resources/icon.png
+    to: icon.png
+
 win:
   executableName: daily-routine
   icon: build/icon.ico
