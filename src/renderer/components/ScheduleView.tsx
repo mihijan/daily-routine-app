@@ -121,8 +121,8 @@ export default function ScheduleView({
   const badge = phaseBadge(state.phase, state.paused)
 
   return (
-    <div>
-      <header className="flex items-start justify-between gap-3">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="flex shrink-0 items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold">
             <CalendarIcon className="h-4 w-4 text-slate-300" />
@@ -143,12 +143,12 @@ export default function ScheduleView({
         </span>
       </header>
 
-      <div className="mt-4">
+      <div className="mt-4 shrink-0">
         <Hero state={state} />
       </div>
 
       {state.phase !== 'weekend' ? (
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid shrink-0 grid-cols-2 gap-3">
           <section className="rounded-2xl border border-white/5 bg-[#121826] px-3 py-3">
             <p className="text-xs text-slate-500">Следующее занятие</p>
             {state.nextBlock ? (
@@ -174,7 +174,7 @@ export default function ScheduleView({
         </div>
       ) : null}
 
-      <div className="mt-5 flex items-center justify-between gap-3">
+      <div className="mt-5 flex shrink-0 items-center justify-between gap-3">
         <h2 className="text-sm font-semibold">Расписание на сегодня</h2>
         <button
           type="button"
@@ -186,10 +186,12 @@ export default function ScheduleView({
         </button>
       </div>
       {state.dailyOverride ? (
-        <p className="mt-1 text-xs text-emerald-300/80">Действует расписание только на сегодня</p>
+        <p className="mt-1 shrink-0 text-xs text-emerald-300/80">
+          Действует расписание только на сегодня
+        </p>
       ) : null}
 
-      <ul className="mt-2 space-y-1">
+      <ul className="app-scroll mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto">
         {state.effectiveSchedule.map((block, index) => {
           const status = blockStatus(state, block, index)
           return (
@@ -225,11 +227,11 @@ export default function ScheduleView({
       <button
         type="button"
         onClick={onTestNotification}
-        className="mt-3 text-xs text-slate-500 hover:text-slate-300"
+        className="mt-3 shrink-0 text-left text-xs text-slate-500 hover:text-slate-300"
       >
         Проверить уведомление
       </button>
-      {testStatus ? <p className="mt-1 text-xs text-slate-400">{testStatus}</p> : null}
+      {testStatus ? <p className="mt-1 shrink-0 text-xs text-slate-400">{testStatus}</p> : null}
     </div>
   )
 }

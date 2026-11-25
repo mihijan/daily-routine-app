@@ -46,13 +46,15 @@ function App(): React.ReactElement {
   }
 
   return (
-    <div className="flex h-full min-h-screen flex-col bg-[#0b1120] text-slate-100">
-      <div className="mx-auto flex h-full min-h-screen w-full max-w-md flex-col px-4 py-4">
-        <div className="app-scroll min-h-0 flex-1 overflow-y-auto">
+    <div className="flex h-full flex-col overflow-hidden bg-[#0b1120] text-slate-100">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-md flex-col px-4 py-4">
+        <div className="flex min-h-0 flex-1 flex-col">
           {!state && !error ? <p className="text-sm text-slate-400">Загрузка…</p> : null}
           {error ? <p className="text-sm text-rose-300">{error}</p> : null}
           {state && editing ? (
-            <ScheduleEditor state={state} onClose={() => setEditing(false)} />
+            <div className="app-scroll min-h-0 flex-1 overflow-y-auto">
+              <ScheduleEditor state={state} onClose={() => setEditing(false)} />
+            </div>
           ) : null}
           {state && !editing ? (
             <ScheduleView
