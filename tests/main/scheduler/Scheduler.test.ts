@@ -236,6 +236,40 @@ describe('Scheduler', () => {
     expect(phases).toEqual(['before-start', 'active'])
   })
 
+  it('stores the dedup key before sending and does not retry a failed send', () => {
+    const order: string[] = []
+    const marked: NotificationLogEntry[] = []
+    let now = at(9, 59, 59)
+    const failing = new Scheduler({
+      now: () => now,
+      getState: () => ({
+        schemaVersion: 1,
+        permanentSchedule: BLOCKS,
+        dailyOverride: null,
+        pauseState: { paused: false, pausedUntil: null },
+        notificationLog: marked.map((entry) => ({ ...entry }))
+      }),
+      markFired: (entry) => {
+        order.push('mark')
+        marked.push(entry)
+      },
+      sendNotification: () => {
+        order.push('send')
+        throw new Error('toast failed')
+      }
+    })
+
+    failing.reconcile()
+    now = at(10, 0, 0)
+    expect(() => failing.tick()).toThrow(/toast failed/)
+    expect(order).toEqual(['mark', 'send'])
+
+    now = at(10, 0, 1)
+    expect(() => failing.tick()).not.toThrow()
+    expect(order).toEqual(['mark', 'send'])
+    expect(marked).toHaveLength(1)
+  })
+
   it('runs the check on a one-second interval after start', () => {
     vi.useFakeTimers()
     const { scheduler, sent, setNow } = harness()

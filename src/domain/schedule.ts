@@ -1,11 +1,13 @@
 import type {
+  AppState,
   DailyOverride,
   NotificationLogEntry,
   NotificationType,
   ScheduleBlock,
-  ScheduleSnapshot
+  ScheduleSnapshot,
+  ScheduleViewState
 } from '../shared/types'
-import { isWeekend, parseTimeToMinutes, toDateKey } from './time'
+import { isWeekend, parseTimeToMinutes, resolvePauseState, toDateKey } from './time'
 
 /** Lead time for the warning that a block is about to end (F-01). */
 export const WARNING_LEAD_MINUTES = 2
@@ -127,6 +129,72 @@ export function computeScheduleSnapshot(
     currentBlock: located.currentBlock,
     nextBlock: located.nextBlock,
     paused
+  }
+}
+
+function wholeSecondsUntil(targetMs: number, nowMs: number): number {
+  return Math.max(0, Math.ceil((targetMs - nowMs) / 1000))
+}
+
+/** View model for the window. Countdown values come from `now`, not from the renderer clock. */
+export function buildScheduleView(state: AppState, now: Date): ScheduleViewState {
+  const pause = resolvePauseState(state.pauseState, now)
+  const today = toDateKey(now)
+  const activeOverride = state.dailyOverride?.date === today ? state.dailyOverride : null
+  const effectiveSchedule = resolveEffectiveSchedule(state.permanentSchedule, activeOverride, today)
+  const snapshot = computeScheduleSnapshot(effectiveSchedule, now, pause.paused)
+  const schedule = orderedBlocks(effectiveSchedule)
+  const first = schedule[0]
+  const last = schedule[schedule.length - 1]
+  const firstStart = first ? parseTimeToMinutes(first.startTime) : null
+  const lastEnd = last ? parseTimeToMinutes(last.endTime) : null
+  const nowMs = now.getTime()
+
+  let remainingSeconds: number | null = null
+  let progress: number | null = null
+  if (snapshot.currentBlock) {
+    const startMinutes = parseTimeToMinutes(snapshot.currentBlock.startTime)
+    const endMinutes = parseTimeToMinutes(snapshot.currentBlock.endTime)
+    if (startMinutes !== null && endMinutes !== null && endMinutes > startMinutes) {
+      const start = atMinutes(now, startMinutes)
+      const end = atMinutes(now, endMinutes)
+      const duration = end - start
+      remainingSeconds = wholeSecondsUntil(end, nowMs)
+      progress = Math.min(1, Math.max(0, (nowMs - start) / duration))
+    }
+  }
+
+  const secondsUntilStart =
+    snapshot.phase === 'before-start' && firstStart !== null
+      ? wholeSecondsUntil(atMinutes(now, firstStart), nowMs)
+      : null
+  const secondsUntilDayEnd =
+    (snapshot.phase === 'before-start' || snapshot.phase === 'active') && lastEnd !== null
+      ? wholeSecondsUntil(atMinutes(now, lastEnd), nowMs)
+      : null
+
+  return {
+    phase: snapshot.phase,
+    paused: pause.paused,
+    pausedUntil: pause.pausedUntil,
+    now: now.toISOString(),
+    dateKey: today,
+    permanentSchedule: state.permanentSchedule.map((block) => ({ ...block })),
+    dailyOverride: activeOverride
+      ? {
+          date: activeOverride.date,
+          blocks: activeOverride.blocks.map((block) => ({ ...block }))
+        }
+      : null,
+    effectiveSchedule,
+    currentBlock: snapshot.currentBlock,
+    nextBlock: snapshot.nextBlock,
+    remainingSeconds,
+    progress,
+    secondsUntilStart,
+    secondsUntilDayEnd,
+    dayStartTime: first?.startTime ?? null,
+    dayEndTime: last?.endTime ?? null
   }
 }
 

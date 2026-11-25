@@ -1,8 +1,4 @@
-import type { TestNotificationResult } from '../shared/ipc-contracts'
-
-interface DailyRoutineApi {
-  testNotification: () => Promise<TestNotificationResult>
-}
+import type { DailyRoutineApi } from '../shared/ipc-contracts'
 
 declare global {
   interface Window {

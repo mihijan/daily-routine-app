@@ -1,12 +1,12 @@
 import {
-  computeScheduleSnapshot,
+  buildScheduleView,
   getNotificationsDue,
   hasNotificationFired,
   notificationKey,
   resolveEffectiveSchedule
 } from '../../domain/schedule'
 import { resolvePauseState, toDateKey } from '../../domain/time'
-import type { AppState, NotificationLogEntry, ScheduleSnapshot } from '../../shared/types'
+import type { AppState, NotificationLogEntry, ScheduleViewState } from '../../shared/types'
 
 export const TICK_INTERVAL_MS = 1000
 
@@ -22,7 +22,7 @@ export interface SchedulerDependencies {
   getState: (now: Date) => AppState
   sendNotification: (body: string) => void
   markFired: (entry: NotificationLogEntry) => void
-  onStateChange?: (snapshot: ScheduleSnapshot) => void
+  onStateChange?: (view: ScheduleViewState) => void
   now?: () => Date
 }
 
@@ -90,7 +90,7 @@ export class Scheduler {
           if (firedThisTick.has(key) || hasNotificationFired(state.notificationLog, notification)) {
             continue
           }
-          this.dependencies.sendNotification(notification.body)
+          // Persist the key first. A failed send must not be retried (at-most-once).
           this.dependencies.markFired({
             date: notification.date,
             blockId: notification.blockId,
@@ -98,10 +98,12 @@ export class Scheduler {
             firedAt: now.toISOString()
           })
           firedThisTick.add(key)
+          this.dependencies.sendNotification(notification.body)
         }
       }
 
       this.lastObservedAt = nowMs
+      this.publish(now)
     } finally {
       this.isTickRunning = false
     }
@@ -109,13 +111,6 @@ export class Scheduler {
 
   private publish(now: Date): void {
     if (!this.dependencies.onStateChange) return
-    const state = this.dependencies.getState(now)
-    const pause = resolvePauseState(state.pauseState, now)
-    const blocks = resolveEffectiveSchedule(
-      state.permanentSchedule,
-      state.dailyOverride,
-      toDateKey(now)
-    )
-    this.dependencies.onStateChange(computeScheduleSnapshot(blocks, now, pause.paused))
+    this.dependencies.onStateChange(buildScheduleView(this.dependencies.getState(now), now))
   }
 }

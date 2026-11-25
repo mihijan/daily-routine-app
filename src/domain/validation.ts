@@ -1,27 +1,11 @@
-import type { ScheduleBlock } from '../shared/types'
+import type { PrepareScheduleResult, ScheduleBlock, ScheduleValidationError } from '../shared/types'
 import { formatMinutes, parseTimeToMinutes } from './time'
 
-export type ScheduleValidationCode =
-  | 'invalid-schedule'
-  | 'empty-schedule'
-  | 'invalid-block'
-  | 'empty-id'
-  | 'duplicate-id'
-  | 'empty-name'
-  | 'invalid-time'
-  | 'invalid-interval'
-  | 'gap'
-  | 'overlap'
-
-export interface ScheduleValidationError {
-  code: ScheduleValidationCode
-  message: string
-  /** Index of the offending block in the schedule that was submitted. */
-  blockIndex?: number
-}
-
-export type PrepareScheduleResult =
-  { ok: true; blocks: ScheduleBlock[] } | { ok: false; errors: ScheduleValidationError[] }
+export type {
+  PrepareScheduleResult,
+  ScheduleValidationCode,
+  ScheduleValidationError
+} from '../shared/types'
 
 interface ParsedBlock {
   index: number

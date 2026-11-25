@@ -25,7 +25,7 @@ This document tracks granular implementation tasks, their status, and links to r
 - [x] Fill in ARCHITECTURE.md
 - [x] Project setup (electron-vite scaffold, toolchain, directory structure)
 - [x] Data modeling (ScheduleBlock, AppState, pause state, notification log)
-- [~] IPC contracts (manual notification check only; schedule channels are still open)
+- [x] IPC contracts
 - [ ] Fill in ROADMAP.md
 
 ## Phase 1 — Schedule & Storage
@@ -47,14 +47,23 @@ This document tracks granular implementation tasks, their status, and links to r
 - [x] Scheduler polling every 1 second, with reconcile on startup, wake, clock jump, and schedule change
 - [x] NotificationService via Electron `Notification` (`silent: false`, default timeout)
 - [x] Day start, 2-minute warning, next block, end-of-day warning, end of day
-- [x] Dedup key `(date, blockId, type)` persisted in the notification log; entries older than yesterday are dropped
+- [x] Dedup key `(date, blockId, type)` persisted before send (at-most-once); entries older than yesterday are dropped
 - [x] Pause until the next working day, including automatic resume
 - [x] Missed notifications are not replayed
 - [x] AppStateRepository, Scheduler, NotificationService, and PowerMonitorAdapter wired in `src/main/index.ts`
 - [x] Manual toast check: button «Проверить уведомление»
 - [x] Unit tests for domain planning, scheduler, repository retention, and notification dispatch
 
-Not in this phase: schedule editor, tray, autostart, and the full IPC surface.
+## Phase 3 — User Interface & IPC
+
+- [x] Typed IPC contracts and preload API for state, schedule edits, pause, and quit
+- [x] Main process publishes `ScheduleViewState` on each scheduler tick and after mutations
+- [x] Main window: current block, countdown, progress, next block, full day, off-schedule states
+- [x] Pause / resume and quit
+- [x] Schedule editor: add, edit, delete, permanent schedule, daily override, reset, validation errors
+- [x] At-most-once dedup: persist the notification key before attempting delivery
+
+Not in this phase: tray and autostart.
 
 ---
 

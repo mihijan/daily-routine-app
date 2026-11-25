@@ -4,11 +4,12 @@ import {
   DAY_END_BLOCK_ID,
   DAY_END_TEXT,
   DAY_END_WARNING_TEXT,
+  buildScheduleView,
   computeScheduleSnapshot,
   getNotificationsDue,
   planNotifications
 } from '../../src/domain/schedule'
-import type { ScheduleBlock } from '../../src/shared/types'
+import type { AppState, ScheduleBlock } from '../../src/shared/types'
 
 function block(id: string, name: string, startTime: string, endTime: string): ScheduleBlock {
   return { id, name, startTime, endTime }
@@ -107,6 +108,67 @@ describe('planNotifications', () => {
     })
     expect(planned.at(-2)?.body).toBe(DAY_END_WARNING_TEXT)
     expect(planned.at(-1)?.body).toBe(DAY_END_TEXT)
+  })
+})
+
+function appState(blocks: ScheduleBlock[], overrideBlocks?: ScheduleBlock[]): AppState {
+  return {
+    schemaVersion: 1,
+    permanentSchedule: blocks,
+    dailyOverride: overrideBlocks ? { date: '2026-11-25', blocks: overrideBlocks } : null,
+    pauseState: { paused: false, pausedUntil: null },
+    notificationLog: []
+  }
+}
+
+describe('buildScheduleView', () => {
+  it('counts down the active block and the rest of the day', () => {
+    const view = buildScheduleView(appState(TWO_BLOCKS), new Date(2026, 10, 25, 10, 30, 0))
+    expect(view.phase).toBe('active')
+    expect(view.currentBlock?.id).toBe('one')
+    expect(view.nextBlock?.id).toBe('two')
+    expect(view.remainingSeconds).toBe(30 * 60)
+    expect(view.progress).toBeCloseTo(0.5)
+    expect(view.secondsUntilDayEnd).toBe(90 * 60)
+    expect(view.dayStartTime).toBe('10:00')
+    expect(view.dayEndTime).toBe('12:00')
+  })
+
+  it('counts down until the day starts and clears the timer after it ends', () => {
+    const before = buildScheduleView(appState(TWO_BLOCKS), new Date(2026, 10, 25, 9, 0, 0))
+    expect(before.phase).toBe('before-start')
+    expect(before.remainingSeconds).toBeNull()
+    expect(before.secondsUntilStart).toBe(60 * 60)
+
+    const after = buildScheduleView(appState(TWO_BLOCKS), new Date(2026, 10, 25, 12, 0, 0))
+    expect(after.phase).toBe('after-end')
+    expect(after.remainingSeconds).toBeNull()
+    expect(after.secondsUntilDayEnd).toBeNull()
+  })
+
+  it('uses the daily override and stays quiet on Saturday', () => {
+    const override = [block('custom', 'Свой день', '12:00', '13:00')]
+    const view = buildScheduleView(
+      appState(TWO_BLOCKS, override),
+      new Date(2026, 10, 25, 12, 15, 0)
+    )
+    expect(view.currentBlock?.name).toBe('Свой день')
+    expect(view.effectiveSchedule).toEqual(override)
+
+    const stale = buildScheduleView(
+      {
+        ...appState(TWO_BLOCKS),
+        dailyOverride: { date: '2026-11-24', blocks: override }
+      },
+      new Date(2026, 10, 25, 11, 30, 0)
+    )
+    expect(stale.dailyOverride).toBeNull()
+    expect(stale.currentBlock?.id).toBe('two')
+
+    const weekend = buildScheduleView(appState(TWO_BLOCKS), SATURDAY)
+    expect(weekend.phase).toBe('weekend')
+    expect(weekend.currentBlock).toBeNull()
+    expect(weekend.remainingSeconds).toBeNull()
   })
 })
 
