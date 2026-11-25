@@ -1,0 +1,28 @@
+appId: com.dailyroutine.app
+productName: Daily Routine
+copyright: Copyright © 2026
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!docs/*'
+  - '!tests/*'
+  - '!*.md'
+  - '!vitest.config.*'
+
+asarUnpack:
+  - resources/**
+
+win:
+  executableName: daily-routine
+  icon: build/icon.ico
+
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always

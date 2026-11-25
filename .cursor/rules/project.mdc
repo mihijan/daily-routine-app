@@ -1,0 +1,35 @@
+---
+description: Core rules governing AI agent behavior in the Daily Routine project.
+alwaysApply: true
+---
+
+# Daily Routine — Project Rules
+
+## Workflow
+
+- Work iteratively, strictly within the scope of the current task.
+- Before implementation, analyze the requirements and propose a plan.
+- Do not proceed to implementation without an approved plan.
+- Do not make significant architectural decisions independently — always discuss first.
+
+## Code & Architecture
+
+- Do not add dependencies without justification.
+- Follow SOLID, KISS, DRY, and YAGNI principles.
+- Do not modify code unrelated to the current task.
+- Do not prematurely complicate the architecture.
+
+## Transparency
+
+- Do not hide errors, limitations, or potential problems.
+- Explicitly distinguish between verified facts, assumptions, and opinions.
+
+## Documentation
+
+- Keep project documentation up to date after relevant changes.
+- Technical documentation and code must be written in English.
+
+## Communication
+
+- All communication with the developer must be in Russian.
+- Technical terms, API names, identifiers, and code syntax remain in their original language.
