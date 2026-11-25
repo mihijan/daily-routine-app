@@ -1,9 +1,18 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
-import { is } from '@electron-toolkit/utils'
+import { electronApp, is } from '@electron-toolkit/utils'
+import { registerIpcHandlers } from './ipc/handlers'
+import { NotificationService } from './notifications/NotificationService'
+import { PowerMonitorAdapter } from './power/PowerMonitorAdapter'
+import { Scheduler } from './scheduler/Scheduler'
+import { AppStateRepository } from './store/AppStateRepository'
+
+/** Matches electron-builder.yml appId. In dev the toolkit uses the Electron executable instead. */
+const APP_USER_MODEL_ID = 'com.dailyroutine.app'
 
 // isQuitting flag — prevents the 'close' handler from hiding the window during app.quit()
 let isQuitting = false
+let scheduler: Scheduler | null = null
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -43,15 +52,36 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
-  // TODO (Bootstrap): initialize AppStateRepository, TrayManager, Scheduler,
-  //                   PowerMonitorAdapter, IPC handlers, autostart registration.
-  //                   Window creation is currently eager for development purposes;
-  //                   it will be made lazy (tray-triggered) in the Bootstrap task.
+  // Windows shows toasts only after an AppUserModelID is set. Tray and autostart come later.
+  // The window stays eager until the tray task makes it lazy.
+  electronApp.setAppUserModelId(APP_USER_MODEL_ID)
+
+  const repository = new AppStateRepository()
+  repository.init()
+
+  const notifications = new NotificationService()
+  scheduler = new Scheduler({
+    getState: (now) => repository.getInMemoryState(now),
+    sendNotification: (body) => {
+      notifications.send(body)
+    },
+    markFired: (entry) => repository.appendNotification(entry)
+  })
+
+  const power = new PowerMonitorAdapter()
+  power.init(() => scheduler?.reconcile())
+
+  registerIpcHandlers({
+    sendTestNotification: () => notifications.sendTest()
+  })
+
+  scheduler.start()
   createWindow()
 })
 
 app.on('before-quit', () => {
   isQuitting = true
+  scheduler?.stop()
 })
 
 // Prevent quitting when all windows are closed — app lives in tray

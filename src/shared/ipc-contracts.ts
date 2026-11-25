@@ -1,4 +1,10 @@
-// IPC channel names and typed request/response shapes.
-// Will be defined during Data Modeling / Bootstrap tasks.
+// IPC channel names shared by Main and Preload.
+// Schedule editor channels are added with the editor. This phase only exposes a manual notification check.
 
-export const IPC_CHANNELS = {} as const
+export const IPC_CHANNELS = {
+  testNotification: 'notifications:test'
+} as const
+
+export type TestNotificationResult = {
+  delivered: boolean
+}

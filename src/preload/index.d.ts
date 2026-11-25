@@ -1,9 +1,12 @@
-// Type declarations for the contextBridge API exposed to the Renderer.
-// Will be expanded with typed methods during Data Modeling / Bootstrap tasks.
+import type { TestNotificationResult } from '../shared/ipc-contracts'
+
+interface DailyRoutineApi {
+  testNotification: () => Promise<TestNotificationResult>
+}
 
 declare global {
   interface Window {
-    api: Record<string, never>
+    api: DailyRoutineApi
   }
 }
 

@@ -1,7 +1,10 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
+import { IPC_CHANNELS, type TestNotificationResult } from '../shared/ipc-contracts'
 
-// API bridge — to be expanded with typed IPC methods during Data Modeling / Bootstrap tasks
-const api = {}
+const api = {
+  testNotification: (): Promise<TestNotificationResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.testNotification)
+}
 
 if (process.contextIsolated) {
   try {
