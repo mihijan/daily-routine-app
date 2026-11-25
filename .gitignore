@@ -4,7 +4,8 @@ vendor/
 
 # Build output
 dist/
-build/
+build/*
+!build/icon.ico
 out/
 
 # Environment

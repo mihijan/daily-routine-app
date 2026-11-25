@@ -6,6 +6,7 @@ import {
   DAY_END_WARNING_TEXT,
   buildScheduleView,
   computeScheduleSnapshot,
+  trayTooltip,
   getNotificationsDue,
   planNotifications
 } from '../../src/domain/schedule'
@@ -169,6 +170,24 @@ describe('buildScheduleView', () => {
     expect(weekend.phase).toBe('weekend')
     expect(weekend.currentBlock).toBeNull()
     expect(weekend.remainingSeconds).toBeNull()
+  })
+})
+
+describe('trayTooltip', () => {
+  it('names the active block and the time left, and the off-schedule states', () => {
+    const active = buildScheduleView(appState(TWO_BLOCKS), new Date(2026, 10, 25, 10, 30, 0))
+    expect(trayTooltip(active)).toBe('Первый — 30мин')
+
+    const before = buildScheduleView(appState(TWO_BLOCKS), new Date(2026, 10, 25, 9, 0, 0))
+    expect(trayTooltip(before)).toBe('День начнётся в 10:00')
+
+    const after = buildScheduleView(appState(TWO_BLOCKS), new Date(2026, 10, 25, 12, 0, 0))
+    expect(trayTooltip(after)).toBe('День завершён')
+
+    const weekend = buildScheduleView(appState(TWO_BLOCKS), SATURDAY)
+    expect(trayTooltip(weekend)).toBe('Выходной')
+
+    expect(trayTooltip({ ...active, paused: true })).toBe('Пауза · Первый — 30мин')
   })
 })
 

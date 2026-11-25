@@ -198,6 +198,33 @@ export function buildScheduleView(state: AppState, now: Date): ScheduleViewState
   }
 }
 
+function formatTrayDuration(totalSeconds: number): string {
+  const minutes = Math.max(0, Math.ceil(totalSeconds / 60))
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (hours > 0 && rest > 0) return `${hours}ч ${rest}мин`
+  if (hours > 0) return `${hours}ч`
+  return `${minutes}мин`
+}
+
+/** Tray tooltip. Windows limits this to 128 characters; these phrases stay well under that. */
+export function trayTooltip(view: ScheduleViewState): string {
+  const withPause = (text: string): string => (view.paused ? `Пауза · ${text}` : text)
+
+  if (view.phase === 'weekend') return withPause('Выходной')
+  if (view.phase === 'after-end') return withPause('День завершён')
+  if (view.phase === 'before-start') {
+    return withPause(
+      view.dayStartTime ? `День начнётся в ${view.dayStartTime}` : 'День ещё не начался'
+    )
+  }
+
+  const name = view.currentBlock?.name ?? 'Daily Routine'
+  const remaining =
+    view.remainingSeconds === null ? '' : ` — ${formatTrayDuration(view.remainingSeconds)}`
+  return withPause(`${name}${remaining}`)
+}
+
 /**
  * Every notification a weekday schedule would produce.
  * A block shorter than the warning lead has no warning: it would fall on or before the block start.

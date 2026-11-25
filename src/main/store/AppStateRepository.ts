@@ -27,6 +27,8 @@ interface StoreSchema {
   dailyOverride: DailyOverride | null
   pauseState: PauseState
   notificationLog: NotificationLogEntry[]
+  /** Windows login item. Defaults to on; the tray checkbox is the user control. */
+  openAtLogin: boolean
 }
 
 export interface AppStateRepositoryOptions {
@@ -106,7 +108,8 @@ export class AppStateRepository {
         permanentSchedule: cloneDefaultSchedule(),
         dailyOverride: null,
         pauseState: defaultPauseState(),
-        notificationLog: []
+        notificationLog: [],
+        openAtLogin: true
       }
     })
   }
@@ -220,6 +223,15 @@ export class AppStateRepository {
     const next = { paused: pauseState.paused, pausedUntil: pauseState.pausedUntil }
     this.store.set('pauseState', next)
     state.pauseState = next
+  }
+
+  /** Whether the app should register itself to start with Windows. Default is on. */
+  isOpenAtLogin(): boolean {
+    return this.store.get('openAtLogin') !== false
+  }
+
+  setOpenAtLogin(enabled: boolean): void {
+    this.store.set('openAtLogin', enabled)
   }
 
   /** Append one fired-notification record. Does not decide whether it should have fired. */

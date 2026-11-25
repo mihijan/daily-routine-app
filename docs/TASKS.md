@@ -63,7 +63,15 @@ This document tracks granular implementation tasks, their status, and links to r
 - [x] Schedule editor: add, edit, delete, permanent schedule, daily override, reset, validation errors
 - [x] At-most-once dedup: persist the notification key before attempting delivery
 
-Not in this phase: tray and autostart.
+## Phase 4 — Desktop Integration
+
+- [x] System tray icon, tooltip, and context menu
+- [x] Lazy main window; × hides it and leaves the scheduler running
+- [x] Windows autostart, on by default, toggled from the tray
+- [x] Single-instance lock; a second launch focuses the existing app
+- [x] Quit from the tray or the window stops the scheduler and removes the tray icon
+- [x] Sleep/resume still reconciles from the current time and does not replay missed notifications
+- [x] App icon for the tray, the window, and the Windows installer
 
 ---
 

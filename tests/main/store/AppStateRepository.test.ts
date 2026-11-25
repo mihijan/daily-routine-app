@@ -44,6 +44,15 @@ describe('AppStateRepository', () => {
     return repository
   }
 
+  it('starts with Windows autostart enabled and remembers a later choice', () => {
+    const repository = open()
+    expect(repository.isOpenAtLogin()).toBe(true)
+    repository.setOpenAtLogin(false)
+
+    const restarted = open()
+    expect(restarted.isOpenAtLogin()).toBe(false)
+  })
+
   it('loads the default schedule on first launch', () => {
     const repository = open()
     const loaded = repository.getPermanentSchedule()
