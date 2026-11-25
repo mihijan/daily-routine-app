@@ -1,22 +1,26 @@
 # Daily Routine
 
-A personal Windows desktop application for managing daily schedules and automated notifications.
+A personal Windows desktop application for managing a daily study schedule and automated notifications.
 
 ## Status
 
-🚧 Active development — project scaffolding complete.
+Active development. The schedule, notifications, main window, and system tray are implemented. Packaging and Windows toast delivery still need a manual check on Windows.
 
 ## Requirements
 
 - [Node.js](https://nodejs.org/) 22+ (via [nvm](https://github.com/nvm-sh/nvm) recommended)
-- Windows 10/11 (target platform for running the app)
+- Windows 10/11 to run the app
+
+Run `npm run dev` from Windows PowerShell or cmd. The Linux Electron build inside WSL has no OpenGL and no session D-Bus, so the window and tray do not start there.
 
 ## Getting Started
 
 ```bash
 npm install
-npm run dev        # start in development mode
+npm run dev
 ```
+
+The process starts in the system tray and does not open the window by itself. Click the tray icon to open the schedule. Closing the window with × hides it; the scheduler keeps running. Quit from the window or the tray menu.
 
 ## Available Commands
 
@@ -39,11 +43,12 @@ src/
 ├── main/          # Electron Main process (Node.js)
 │   ├── ipc/       # IPC handler registration
 │   ├── notifications/
-│   ├── power/
+│   ├── power/     # sleep/resume → scheduler reconcile
 │   ├── scheduler/
+│   ├── startup/   # Windows autostart
 │   ├── store/
 │   ├── tray/
-│   └── window/
+│   └── window/    # lazy window; × hides to tray
 ├── preload/       # contextBridge security layer
 ├── renderer/      # React application (Chromium)
 │   ├── components/
@@ -51,9 +56,11 @@ src/
 └── shared/        # Types and IPC contracts (used by both Main and Renderer)
 
 tests/
-├── domain/        # Unit tests for pure domain logic
-└── renderer/      # Component tests (requires happy-dom when implemented)
+├── domain/        # Unit tests for schedule rules and notification timing
+└── main/          # Unit tests for storage, scheduler, IPC, and notifications
 ```
+
+`npm test` runs `tests/**/*.test.ts` only.
 
 ## Documentation
 
