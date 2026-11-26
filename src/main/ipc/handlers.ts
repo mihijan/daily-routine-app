@@ -1,6 +1,6 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import type { PrepareScheduleResult, ScheduleBlock, ScheduleViewState } from '../../shared/types'
-import { IPC_CHANNELS, type TestNotificationResult } from '../../shared/ipc-contracts'
+import { IPC_CHANNELS } from '../../shared/ipc-contracts'
 
 export interface IpcDependencies {
   getViewState: () => ScheduleViewState
@@ -10,7 +10,6 @@ export interface IpcDependencies {
   pauseNotifications: () => void
   resumeNotifications: () => void
   quit: () => void
-  sendTestNotification: () => boolean
 }
 
 function isTrustedSender(event: IpcMainInvokeEvent): boolean {
@@ -81,10 +80,5 @@ export function registerIpcHandlers(options: IpcDependencies): void {
   ipcMain.handle(IPC_CHANNELS.quit, (event): void => {
     assertTrusted(event)
     options.quit()
-  })
-
-  ipcMain.handle(IPC_CHANNELS.testNotification, (event): TestNotificationResult => {
-    assertTrusted(event)
-    return { delivered: options.sendTestNotification() }
   })
 }

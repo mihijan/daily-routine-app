@@ -34,7 +34,6 @@ function dependencies(overrides: Partial<IpcDependencies> = {}): IpcDependencies
     pauseNotifications: vi.fn(),
     resumeNotifications: vi.fn(),
     quit: vi.fn(),
-    sendTestNotification: vi.fn(() => true),
     ...overrides
   }
 }
@@ -45,21 +44,19 @@ describe('registerIpcHandlers', () => {
     ipc.handlers.clear()
   })
 
-  it('delivers the test notification only for the app renderer', () => {
-    const sendTestNotification = vi.fn(() => true)
-    registerIpcHandlers(dependencies({ sendTestNotification }))
-    const handler = ipc.handlers.get(IPC_CHANNELS.testNotification)
+  it('runs quit only for the app renderer', () => {
+    const quit = vi.fn()
+    registerIpcHandlers(dependencies({ quit }))
+    const handler = ipc.handlers.get(IPC_CHANNELS.quit)
 
-    expect(handler?.(fileEvent)).toEqual({ delivered: true })
+    expect(handler?.(fileEvent)).toBeUndefined()
 
     process.env['ELECTRON_RENDERER_URL'] = 'http://localhost:5173'
-    expect(handler?.({ senderFrame: { url: 'http://localhost:5173/' } })).toEqual({
-      delivered: true
-    })
+    expect(handler?.({ senderFrame: { url: 'http://localhost:5173/' } })).toBeUndefined()
 
     expect(() => handler?.(evilEvent)).toThrow(/sender/)
     expect(() => handler?.({ senderFrame: null })).toThrow(/sender/)
-    expect(sendTestNotification).toHaveBeenCalledTimes(2)
+    expect(quit).toHaveBeenCalledTimes(2)
   })
 
   it('rejects an untrusted schedule save before it reaches the repository', () => {

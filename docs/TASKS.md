@@ -51,7 +51,7 @@ This document tracks granular implementation tasks, their status, and links to r
 - [x] Pause until the next working day, including automatic resume
 - [x] Missed notifications are not replayed
 - [x] AppStateRepository, Scheduler, NotificationService, and PowerMonitorAdapter wired in `src/main/index.ts`
-- [x] Manual toast check: button «Проверить уведомление»
+- [x] Manual toast check: button «Проверить уведомление» — removed in Phase 5; it was a debug control and is not in the PRD
 - [x] Unit tests for domain planning, scheduler, repository retention, and notification dispatch
 
 ## Phase 3 — User Interface & IPC
@@ -73,6 +73,22 @@ This document tracks granular implementation tasks, their status, and links to r
 - [x] Sleep/resume still reconciles from the current time and does not replay missed notifications
 - [x] App icon for the tray, the window, and the Windows installer
 
+## Phase 5 — Testing & Build
+
+- [x] Compare the implementation with PRD.md and fix the pause control label (`Пауза до следующего дня`)
+- [x] Remove the debug toast button, its IPC channel, and the placeholder `ScheduleEditor` test
+- [x] Production electron-builder config: NSIS x64, `appId` `com.dailyroutine.app`, version `0.1.0`, icons, source excluded from the package
+- [x] `npm run typecheck`, `npm test`, and `npm run build` pass. `npm run lint` reports 0 errors and pre-existing CRLF warnings caused by `core.autocrlf=true` (the git index is LF)
+- [x] Windows x64 NSIS installer: `dist/daily-routine-0.1.0-setup.exe`
+- [x] Packaged `daily-routine.exe` starts without Node.js and writes `app-state.json` under `%APPDATA%\daily-routine`, not next to the executable
+- [ ] Install through the NSIS wizard and confirm the Start menu shortcut, desktop shortcut, and uninstall entry
+- [ ] Confirm Windows toast text and the default notification sound for a warning and a transition
+- [ ] Confirm sleep/resume and a clock change do not replay missed notifications
+- [ ] Confirm autostart after a Windows sign-out uses the installed executable
+- [ ] Confirm how Windows SmartScreen treats the unsigned installer
+
+F-25 (one-time warning when Windows notifications are suppressed) is not implemented. OQ-01 is still open: Windows does not expose a reliable signal for Focus Assist or per-app notification settings.
+
 ---
 
-_Tasks for subsequent phases will be added as the roadmap is defined._
+_ROADMAP.md is still a stub. That Phase 0 item stays open._

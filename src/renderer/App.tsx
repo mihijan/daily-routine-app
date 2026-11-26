@@ -7,7 +7,6 @@ import { ExitIcon, PauseIcon, PlayIcon } from './icons'
 function App(): React.ReactElement {
   const { state, error } = useScheduleState()
   const [editing, setEditing] = useState(false)
-  const [testStatus, setTestStatus] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   async function onPause(): Promise<void> {
@@ -31,20 +30,6 @@ function App(): React.ReactElement {
     }
   }
 
-  async function onTestNotification(): Promise<void> {
-    try {
-      const result = await window.api.testNotification()
-      setTestStatus(
-        result.delivered
-          ? 'Запрос отправлен. Если уведомления Windows разрешены, тост появится сейчас.'
-          : 'Эта сессия не поддерживает системные уведомления.'
-      )
-    } catch (testError) {
-      console.error(testError)
-      setTestStatus('Не удалось отправить уведомление.')
-    }
-  }
-
   return (
     <div className="flex h-full flex-col overflow-hidden bg-[#0b1120] text-slate-100">
       <div className="mx-auto flex h-full min-h-0 w-full max-w-md flex-col px-4 py-4">
@@ -57,14 +42,7 @@ function App(): React.ReactElement {
             </div>
           ) : null}
           {state && !editing ? (
-            <ScheduleView
-              state={state}
-              onEdit={() => setEditing(true)}
-              onTestNotification={() => {
-                void onTestNotification()
-              }}
-              testStatus={testStatus}
-            />
+            <ScheduleView state={state} onEdit={() => setEditing(true)} />
           ) : null}
         </div>
 
@@ -78,7 +56,7 @@ function App(): React.ReactElement {
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#151c2c] px-3 py-3 text-sm text-slate-100 disabled:opacity-50"
           >
             {state?.paused ? <PlayIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
-            {state?.paused ? 'Возобновить' : 'Пауза до завтра'}
+            {state?.paused ? 'Возобновить' : 'Пауза до следующего дня'}
           </button>
           <button
             type="button"

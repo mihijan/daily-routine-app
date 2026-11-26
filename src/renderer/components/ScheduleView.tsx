@@ -13,8 +13,6 @@ type BlockStatus = 'past' | 'current' | 'upcoming'
 interface ScheduleViewProps {
   state: ScheduleViewState
   onEdit: () => void
-  onTestNotification: () => void
-  testStatus: string | null
 }
 
 function blockStatus(state: ScheduleViewState, block: ScheduleBlock, index: number): BlockStatus {
@@ -112,12 +110,7 @@ function Hero({ state }: { state: ScheduleViewState }): React.ReactElement {
   )
 }
 
-export default function ScheduleView({
-  state,
-  onEdit,
-  onTestNotification,
-  testStatus
-}: ScheduleViewProps): React.ReactElement {
+export default function ScheduleView({ state, onEdit }: ScheduleViewProps): React.ReactElement {
   const badge = phaseBadge(state.phase, state.paused)
 
   return (
@@ -223,15 +216,6 @@ export default function ScheduleView({
           )
         })}
       </ul>
-
-      <button
-        type="button"
-        onClick={onTestNotification}
-        className="mt-3 shrink-0 text-left text-xs text-slate-500 hover:text-slate-300"
-      >
-        Проверить уведомление
-      </button>
-      {testStatus ? <p className="mt-1 shrink-0 text-xs text-slate-400">{testStatus}</p> : null}
     </div>
   )
 }

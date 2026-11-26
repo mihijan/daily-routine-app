@@ -101,11 +101,8 @@ src/
     └── ipc-contracts.ts             # IPC channel names + typed request/response shapes
 
 tests/
-├── domain/
-│   └── schedule.test.ts             # Unit tests for pure domain logic
-└── renderer/
-    └── components/
-        └── ScheduleEditor.test.tsx
+├── domain/                          # Unit tests for pure domain logic
+└── main/                            # Unit tests for storage, scheduler, IPC, and notifications
 ```
 
 **Layer constraints:**

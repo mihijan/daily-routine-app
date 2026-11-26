@@ -1,7 +1,6 @@
 import { Notification } from 'electron'
 
 export const NOTIFICATION_TITLE = 'Daily Routine'
-export const TEST_NOTIFICATION_BODY = 'Проверка уведомлений'
 
 /**
  * Platform dispatch only. Scheduling, deduplication, and pause live in the Scheduler.
@@ -25,10 +24,5 @@ export class NotificationService {
     })
     notification.show()
     return true
-  }
-
-  /** Fires one toast immediately, outside the schedule. Used to verify OS delivery. */
-  sendTest(): boolean {
-    return this.send(TEST_NOTIFICATION_BODY)
   }
 }

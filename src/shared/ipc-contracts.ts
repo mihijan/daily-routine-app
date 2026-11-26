@@ -8,13 +8,8 @@ export const IPC_CHANNELS = {
   resetDailyOverride: 'schedule:reset-override',
   pauseNotifications: 'schedule:pause',
   resumeNotifications: 'schedule:resume',
-  quit: 'app:quit',
-  testNotification: 'notifications:test'
+  quit: 'app:quit'
 } as const
-
-export type TestNotificationResult = {
-  delivered: boolean
-}
 
 export interface DailyRoutineApi {
   getState: () => Promise<ScheduleViewState>
@@ -25,5 +20,4 @@ export interface DailyRoutineApi {
   pauseNotifications: () => Promise<void>
   resumeNotifications: () => Promise<void>
   quit: () => Promise<void>
-  testNotification: () => Promise<TestNotificationResult>
 }

@@ -80,8 +80,7 @@ if (!gotSingleInstanceLock) {
         repository.resumeNotifications()
         reconcile()
       },
-      quit,
-      sendTestNotification: () => notifications.sendTest()
+      quit
     })
 
     let trayReady = false

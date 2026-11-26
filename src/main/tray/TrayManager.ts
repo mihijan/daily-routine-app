@@ -63,7 +63,7 @@ export class TrayManager {
         { label: 'Открыть расписание', click: () => actions.onOpen() },
         { type: 'separator' },
         {
-          label: paused ? 'Возобновить' : 'Пауза до завтра',
+          label: paused ? 'Возобновить' : 'Пауза до следующего дня',
           click: () => (paused ? actions.onResume() : actions.onPause())
         },
         {
