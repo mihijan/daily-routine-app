@@ -34,14 +34,6 @@ describe('NotificationService', () => {
     expect(notificationMock.show).toHaveBeenCalledOnce()
   })
 
-  it('sends the manual check with a fixed body', () => {
-    const service = new NotificationService()
-    expect(service.sendTest()).toBe(true)
-    expect(notificationMock.Notification).toHaveBeenCalledWith(
-      expect.objectContaining({ body: 'Проверка уведомлений', silent: false })
-    )
-  })
-
   it('does not construct a toast when the platform cannot show one', () => {
     notificationMock.Notification.isSupported.mockReturnValue(false)
     const service = new NotificationService()

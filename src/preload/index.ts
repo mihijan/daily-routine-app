@@ -19,8 +19,7 @@ const api: DailyRoutineApi = {
   resetDailyOverride: () => ipcRenderer.invoke(IPC_CHANNELS.resetDailyOverride),
   pauseNotifications: () => ipcRenderer.invoke(IPC_CHANNELS.pauseNotifications),
   resumeNotifications: () => ipcRenderer.invoke(IPC_CHANNELS.resumeNotifications),
-  quit: () => ipcRenderer.invoke(IPC_CHANNELS.quit),
-  testNotification: () => ipcRenderer.invoke(IPC_CHANNELS.testNotification)
+  quit: () => ipcRenderer.invoke(IPC_CHANNELS.quit)
 }
 
 if (process.contextIsolated) {
